@@ -1,4 +1,10 @@
-<h1>{{printf "Event name: %s" .Title}}</h1>
+<h1>{{printf "Event name: %s" .Title2}}</h1>
 
-<div>{{printf "%s" .Body}}</div>
-    <!--<div>((prinf "%s" .counter))</div>!-->
+<div style="padding-left: 40px">
+{{range $element := .Body2}}
+{{$element}}
+<br>
+{{ end }}
+</div>
+
+    <!--<div>((prinf "%s: %s" .counter))</div>!-->

@@ -17,46 +17,49 @@ var interval int
 var counter int
 var temp string
 var telo string
-var array []int
+var array []string
 
 type Page struct {
 	Title string
 	Body []byte
 }
-
-
+type Page2 struct {
+	Title2 string
+	Body2 []string
+}
 
 func (p *Page) save () error {
 	f := p.Title + ".txt"
 	return ioutil.WriteFile(f, p.Body, 0600)
 }
 
-func load(title string) (*Page, error) {
+func load(title string) (*Page2, error) {
+	return &Page2{Title2: title, Body2: array}, nil
+}
 
-	f := title + ".txt"
-	body, err := ioutil.ReadFile(f)
-	if err != nil {
-		return nil, err
-	}
-	return &Page{Title: title, Body: body}, nil
+func load2(title string) (*Page, error) {
+	return &Page{Title: title, Body: []byte(strconv.Itoa(len(array)))}, nil
 }
 
 func view(w http.ResponseWriter, r *http.Request) {
 
-	title := r.URL.Path[len("/"):]
-
-	p, _ := load(title)
-
-
-	t, _ := template.ParseFiles("test.html")
-	t.Execute(w, p)
-	temp = title
-
+	if cas1 != 0 || cas2 != 0 || interval != 0{
+		title := r.URL.Path[len("/"):]
+		p, _ := load(title)
+		t, _ := template.ParseFiles("test.html")
+		t.Execute(w, p)
+		temp = title
+	}else{
+		title := r.URL.Path[len("/"):]
+		p, _ := load2(title)
+		t, _ := template.ParseFiles("test2.html")
+		t.Execute(w, p)
+		temp = title
+	}
 }
 
 func save(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/"):]
-
 	body := strconv.Itoa(counter)
 	p := &Page{Title: title, Body: []byte(body)}
 	p.save()
@@ -72,11 +75,10 @@ func Exists(name string) bool {
 	return true
 }
 
-func filter(s string) {
+func filter(s string, title string) {
+	if cas1 != 0 || cas2 != 0 || interval != 0{
 	diff_time := cas2 - cas1
 	pocet_Intervalov := diff_time / interval / 60
-	//t := time.Unix(1491400800, 0).Format(time.RFC822)
-	//e := time.Unix(1491408000, 0).Format(time.RFC822)
 
 	for i := 0; i < pocet_Intervalov; i++ {
 
@@ -93,9 +95,11 @@ func filter(s string) {
 				counter++
 			}
 		}
-		array = append(array, counter)
-		fmt.Print(array)
+		array = append(array,"{   " + title + ":   " + strconv.Itoa(counter) + "   }")
 		counter = 0
+		}
+	}else{
+		array = strings.Split(s,";")
 	}
 }
 
@@ -107,60 +111,37 @@ func newTest(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path[len("/"):] != "favicon.ico" {
 		switch r.Method {
 		case "GET":
-			//Counter(w,r)
 			cas1, _ = strconv.Atoi(r.URL.Query().Get("cas1"))
 			cas2, _ = strconv.Atoi(r.URL.Query().Get("cas2"))
 			interval, _ = strconv.Atoi(r.URL.Query().Get("interval"))
-			//fmt.Println(cas1)
-			//fmt.Println(cas2)
-			//fmt.Println(interval)
+
 			title := r.URL.Path[len("/"):]
 
 			if Exists(title) == true {
 
 				if temp != title {
-					//counter = 0
 					f := title + ".txt"
 					body, _ := ioutil.ReadFile(f)
-					//buf := bytes.NewBuffer(body)
-					//counter, _ = int(binary.ReadVarint(buf))
 					t := time.Now().Format("02 Jan 06 15:04 UTC")
 					telo = string(body) + t + ";"
-					//filter(telo)
 					p := &Page{Title: title, Body: []byte(telo)}
 					p.save()
 
 				}else{
 					t := time.Now().Format("02 Jan 06 15:04 UTC")
 					telo = telo + t + ";"
-					//filter(telo)
 					p := &Page{Title: title, Body: []byte(telo)}
 					p.save()
 				}
+				filter(telo, title)
 				view(w, r)
 			}
+			array = nil
 		case "POST":
 			save(w, r)
 		}
 	}
 }
-//func Counter(w http.ResponseWriter, req *http.Request) {
-//	switch req.Method {
-//	case "GET": // increment n
-//		counter++
-//	case "POST": // set n to posted value
-//		buf := new(bytes.Buffer)
-//		io.Copy(buf, req.Body)
-//		body := buf.String()
-//		if _, err := strconv.Atoi(body); err != nil {
-//			fmt.Fprintf(w, "bad POST: %v\nbody: [%v]\n", err, body)
-//		} else {
-//			counter=0
-//			fmt.Fprint(w, "counter reset\n")
-//		}
-//	}
-//	//fmt.Fprintf(w, "counter = %d\n", counter)
-//}
 
 func main() {
 	http.HandleFunc("/", newTest)
