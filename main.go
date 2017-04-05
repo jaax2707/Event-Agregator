@@ -36,7 +36,6 @@ func (p *Page) save () error {
 func load(title string) (*Page2, error) {
 	return &Page2{Title2: title, Body2: array}, nil
 }
-
 func load2(title string) (*Page, error) {
 	return &Page{Title: title, Body: []byte(strconv.Itoa(len(array)))}, nil
 }
@@ -76,17 +75,21 @@ func Exists(name string) bool {
 }
 
 func filter(s string, title string) {
+
 	if cas1 != 0 || cas2 != 0 || interval != 0{
 	diff_time := cas2 - cas1
 	pocet_Intervalov := diff_time / interval / 60
+		fmt.Println(pocet_Intervalov)
 
 	for i := 0; i < pocet_Intervalov; i++ {
 
-		init1 := time.Unix(1491400800+int64(i*10*60), 0).Format(time.RFC822)
-		init2 := time.Unix(1491400800+int64(10*60*(i+1)), 0).Format(time.RFC822)
+		init1 := time.Unix(int64(cas1)+int64(i*interval*60), 0).Format(time.RFC822)
+		init2 := time.Unix(int64(cas1)+int64(interval*60*(i+1)), 0).Format(time.RFC822)
 
 		str := strings.Split(s, ";")
+
 		for j := 0; j < len(str); j++ {
+
 			start, _ := time.Parse(time.RFC822, init1)
 			end, _ := time.Parse(time.RFC822, init2)
 			in, _ := time.Parse(time.RFC822, str[j])
@@ -95,6 +98,7 @@ func filter(s string, title string) {
 				counter++
 			}
 		}
+		fmt.Println(counter)
 		array = append(array,"{   " + title + ":   " + strconv.Itoa(counter) + "   }")
 		counter = 0
 		}
@@ -146,7 +150,4 @@ func newTest(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/", newTest)
 	http.ListenAndServe(":8000", nil)
-	fmt.Println(cas1)
-	fmt.Println(cas2)
-	fmt.Println(interval)
 }
