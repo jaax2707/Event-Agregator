@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"fmt"
 	"strconv"
 	"os"
 	"time"
@@ -42,7 +41,7 @@ func load2(title string) (*Page, error) {
 
 func view(w http.ResponseWriter, r *http.Request) {
 
-	if cas1 != 0 || cas2 != 0 || interval != 0{
+	if cas1 != 0 && cas2 != 0 && interval != 0{
 		title := r.URL.Path[len("/"):]
 		p, _ := load(title)
 		t, _ := template.ParseFiles("test.html")
@@ -76,10 +75,9 @@ func Exists(name string) bool {
 
 func filter(s string, title string) {
 
-	if cas1 != 0 || cas2 != 0 || interval != 0{
+	if cas1 != 0 && cas2 != 0 && interval != 0{
 	diff_time := cas2 - cas1
 	pocet_Intervalov := diff_time / interval / 60
-		fmt.Println(pocet_Intervalov)
 
 	for i := 0; i < pocet_Intervalov; i++ {
 
@@ -98,7 +96,6 @@ func filter(s string, title string) {
 				counter++
 			}
 		}
-		fmt.Println(counter)
 		array = append(array,"{   " + title + ":   " + strconv.Itoa(counter) + "   }")
 		counter = 0
 		}
@@ -112,11 +109,11 @@ func inTimeSpan(start, end, check time.Time) bool {
 }
 
 func newTest(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path[len("/"):] != "favicon.ico" {
+	if r.URL.Path[len("/"):] != "favicon.ico" && r.URL.Path[len("/"):] != ""{
 		switch r.Method {
 		case "GET":
-			cas1, _ = strconv.Atoi(r.URL.Query().Get("cas1"))
-			cas2, _ = strconv.Atoi(r.URL.Query().Get("cas2"))
+			cas1, _ = strconv.Atoi(r.URL.Query().Get("from"))
+			cas2, _ = strconv.Atoi(r.URL.Query().Get("to"))
 			interval, _ = strconv.Atoi(r.URL.Query().Get("interval"))
 
 			title := r.URL.Path[len("/"):]
